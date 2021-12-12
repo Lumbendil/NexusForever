@@ -272,7 +272,6 @@ namespace NexusForever.Game.Entity
             InputKeySet       = (InputSets)model.InputKeySet;
             Faction1          = (Faction)model.FactionId;
             Faction2          = (Faction)model.FactionId;
-            innateIndex       = model.InnateIndex;
             flags             = (CharacterFlag)model.Flags;
 
             CreateTime        = model.CreateTime;
@@ -700,11 +699,6 @@ namespace NexusForever.Game.Entity
             QuestManager.SendInitialPackets();
             AchievementManager.SendInitialPackets(null);
             Account.RewardPropertyManager.SendInitialPackets();
-
-            Session.EnqueueMessageEncrypted(new ServerPlayerInnate
-            {
-                InnateIndex = InnateIndex
-            });
 
             log.Trace($"Player {Name} took {(DateTime.UtcNow - start).TotalMilliseconds}ms to send packets after add to map.");
         }
