@@ -24,6 +24,8 @@ using NexusForever.Network.World.Entity;
 using NexusForever.Network.World.Message.Model;
 using NexusForever.Network.World.Message.Model.Shared;
 using NexusForever.Shared.Game;
+using NexusForever.Script.Template;
+using NetworkPropertyValue = NexusForever.Network.World.Message.Model.Shared.PropertyValue;
 
 namespace NexusForever.Game.Entity
 {
@@ -32,6 +34,9 @@ namespace NexusForever.Game.Entity
         public EntityType Type { get; }
         public EntityCreateFlag CreateFlags { get; set; }
         public Vector3 Rotation { get; set; } = Vector3.Zero;
+        public Dictionary<Property, IPropertyValue> Properties { get; } = new();
+        public byte QuestChecklistIdx { get; protected set; }
+
         public uint EntityId { get; protected set; }
 
         public uint CreatureId
@@ -169,15 +174,16 @@ namespace NexusForever.Game.Entity
         /// </summary>
         public virtual void Initialise(EntityModel model)
         {
-            EntityId      = model.Id;
-            CreatureId    = model.Creature;
-            Rotation      = new Vector3(model.Rx, model.Ry, model.Rz);
-            DisplayInfo   = model.DisplayInfo;
-            OutfitInfo    = model.OutfitInfo;
-            Faction1      = (Faction)model.Faction1;
-            Faction2      = (Faction)model.Faction2;
-            ActivePropId  = model.ActivePropId;
-            WorldSocketId = model.WorldSocketId;
+            EntityId          = model.Id;
+            CreatureId        = model.Creature;
+            Rotation          = new Vector3(model.Rx, model.Ry, model.Rz);
+            DisplayInfo       = model.DisplayInfo;
+            OutfitInfo        = model.OutfitInfo;
+            Faction1          = (Faction)model.Faction1;
+            Faction2          = (Faction)model.Faction2;
+            ActivePropId      = model.ActivePropId;
+            WorldSocketId     = model.WorldSocketId;
+            QuestChecklistIdx = model.QuestChecklistIdx;
 
             foreach (EntityStatModel statModel in model.EntityStat)
                 stats.Add((Stat)statModel.Stat, new StatValue(statModel));
@@ -333,7 +339,11 @@ namespace NexusForever.Game.Entity
             foreach (uint targetGroupId in AssetManager.Instance.GetTargetGroupsForCreatureId(CreatureId) ?? Enumerable.Empty<uint>())
                 activator.QuestManager.ObjectiveUpdate(QuestObjectiveType.ActivateTargetGroup, targetGroupId, 1u); // Updates the objective, but seems to disable all the other targets. TODO: Investigate
 
-            // TODO: Fire Scripts
+            activator.QuestManager.ObjectiveUpdate(QuestObjectiveType.ActivateTargetGroupChecklist, CreatureId, QuestChecklistIdx);
+            activator.QuestManager.ObjectiveUpdate(QuestObjectiveType.ActivateEntity, CreatureId, 1u);
+            activator.QuestManager.ObjectiveUpdate(QuestObjectiveType.SucceedCSI, CreatureId, 1u);
+
+            scriptCollection?.Invoke<IWorldEntityScript>(s => s.OnActivateSuccess(activator));
         }
 
         /// <summary>
@@ -341,7 +351,7 @@ namespace NexusForever.Game.Entity
         /// </summary>
         public virtual void OnActivateFail(IPlayer activator)
         {
-            // TODO: Fire Scripts
+            scriptCollection?.Invoke<IWorldEntityScript>(s => s.OnActivateFail(activator));
         }
 
         /// <summary>
