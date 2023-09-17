@@ -28,10 +28,10 @@ namespace NexusForever.Game.Entity
             if (entry == null)
                 throw new ArgumentNullException();
 
-            Initialise(creatureId, 0, 0); // TODO: Get display info from TBL or optional override params
+            Initialise(creatureId); // TODO: Get display info from TBL or optional override params
             afterAddToMap = actionAfterAddToMap;
 
-            SetProperty(Property.BaseHealth, 101.0f);
+            SetBaseProperty(Property.BaseHealth, 101.0f);
 
             SetStat(Stat.Health, 101u);
             SetStat(Stat.Level, 1u);
